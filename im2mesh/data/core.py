@@ -85,6 +85,10 @@ class Shapes3dDataset(data.Dataset):
             split_file = os.path.join(subpath, split + '.lst')
             with open(split_file, 'r') as f:
                 models_c = f.read().split('\n')
+
+            # remove empty sample at the end
+            if models_c[-1] == "":
+                models_c.pop()
             
             self.models += [
                 {'category': c, 'model': m}
