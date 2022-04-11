@@ -13,16 +13,16 @@ numpy_include_dir = numpy.get_include()
 
 # Extensions
 # pykdtree (kd tree)
-pykdtree = Extension(
-    'im2mesh.utils.libkdtree.pykdtree.kdtree',
-    sources=[
-        'im2mesh/utils/libkdtree/pykdtree/kdtree.c',
-        'im2mesh/utils/libkdtree/pykdtree/_kdtree_core.c'
-    ],
-    language='c',
-    extra_compile_args=['-std=c99', '-O3', '-fopenmp'],
-    extra_link_args=['-lgomp'],
-)
+# pykdtree = Extension(
+#     'im2mesh.utils.libkdtree.pykdtree.kdtree',
+#     sources=[
+#         'im2mesh/utils/libkdtree/pykdtree/kdtree.c',
+#         'im2mesh/utils/libkdtree/pykdtree/_kdtree_core.c'
+#     ],
+#     language='c',
+#     extra_compile_args=['-std=c99', '-O3', '-fopenmp'],
+#     extra_link_args=['-lgomp'],
+# )
 
 # mcubes (marching cubes algorithm)
 mcubes_module = Extension(
@@ -43,7 +43,8 @@ triangle_hash_module = Extension(
     sources=[
         'im2mesh/utils/libmesh/triangle_hash.pyx'
     ],
-    libraries=['m']  # Unix-like specific
+    libraries=['m'],  # Unix-like specific
+    include_dirs=[numpy_include_dir]
 )
 
 # mise (efficient mesh extraction)
@@ -59,7 +60,8 @@ simplify_mesh_module = Extension(
     'im2mesh.utils.libsimplify.simplify_mesh',
     sources=[
         'im2mesh/utils/libsimplify/simplify_mesh.pyx'
-    ]
+    ],
+    include_dirs=[numpy_include_dir]
 )
 
 # voxelization (efficient mesh voxelization)
@@ -93,7 +95,7 @@ dmc_cuda_module = CUDAExtension(
 
 # Gather all extension modules
 ext_modules = [
-    pykdtree,
+    # pykdtree,
     mcubes_module,
     triangle_hash_module,
     mise_module,
