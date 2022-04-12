@@ -74,7 +74,7 @@ model = config.get_model(cfg, device=device, dataset=train_dataset)
 
 # Intialize training
 npoints = 1000
-optimizer = optim.Adam(model.parameters(), lr=1e-4)
+optimizer = optim.Adam(model.parameters(), lr=1e-3)
 # optimizer = optim.SGD(model.parameters(), lr=1e-4, momentum=0.9)
 trainer = config.get_trainer(model, optimizer, cfg, device=device)
 
@@ -102,6 +102,12 @@ print('Current best validation metric (%s): %.8f'
 # TODO: reintroduce or remove scheduler?
 # scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=4000,
 #                                       gamma=0.1, last_epoch=epoch_it)
+milestone_step = cfg['training']['num_epochs'] // 3
+scheduler = optim.lr_scheduler.MultiStepLR(
+    optimizer,
+    milestones=[ milestone_step, milestone_step * 2 ],
+    gamma=0.1
+)
 logger = SummaryWriter(os.path.join(out_dir, 'logs'))
 
 # Shorthands
@@ -167,3 +173,9 @@ while True:
             checkpoint_io.save('model.pt', epoch_it=epoch_it, it=it,
                                loss_val_best=metric_val_best)
             exit(3)
+        elif epoch_it >= cfg['training']['num_epochs']:
+            print('Epoch limit reached. Exiting.')
+            checkpoint_io.save('model.pt', epoch_it=epoch_it, it=it,
+                               loss_val_best=metric_val_best)
+            exit(3)
+    scheduler.step()    # after torch 1.1.0
