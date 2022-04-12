@@ -102,10 +102,9 @@ print('Current best validation metric (%s): %.8f'
 # TODO: reintroduce or remove scheduler?
 # scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=4000,
 #                                       gamma=0.1, last_epoch=epoch_it)
-milestone_step = cfg['training']['num_epochs'] // 3
 scheduler = optim.lr_scheduler.MultiStepLR(
     optimizer,
-    milestones=[ milestone_step, milestone_step * 2 ],
+    milestones=[ 100000, 250000 ],
     gamma=0.1
 )
 logger = SummaryWriter(os.path.join(out_dir, 'logs'))
@@ -173,9 +172,9 @@ while True:
             checkpoint_io.save('model.pt', epoch_it=epoch_it, it=it,
                                loss_val_best=metric_val_best)
             exit(3)
-        elif epoch_it >= cfg['training']['num_epochs']:
+        elif it >= cfg['training']['num_iters']:
             print('Epoch limit reached. Exiting.')
             checkpoint_io.save('model.pt', epoch_it=epoch_it, it=it,
                                loss_val_best=metric_val_best)
             exit(3)
-    scheduler.step()    # after torch 1.1.0
+        scheduler.step()    # after torch 1.1.0

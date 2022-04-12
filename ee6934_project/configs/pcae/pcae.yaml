@@ -2,7 +2,7 @@ inherit_from: configs/pointcloud/onet.yaml
 data:
   pointcloud_n: 2048
 training:
-  num_epochs: 7500
+  num_iters: 300000
 model:
   decoder: simple
   encoder_kwargs:
