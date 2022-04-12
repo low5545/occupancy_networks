@@ -1,0 +1,5 @@
+inherit_from: ee6934_project/configs/pcae/pcae.yaml
+data:
+  classes: ['03001627']
+training:
+  out_dir:  out/ee6934_project/pcae/pcae_chairs
