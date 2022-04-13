@@ -32,4 +32,6 @@ dependencies:
   - pip:
     - h5py
     - plyfile
+    - git+https://github.com/bayesiains/nflows.git
+    - umnn
 
