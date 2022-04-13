@@ -12,7 +12,7 @@ from im2mesh import config
 from im2mesh.checkpoints import CheckpointIO
 
 parser = argparse.ArgumentParser(
-    description='Extract meshes from occupancy process.'
+    description='Extract latent code from auto-encoder.'
 )
 parser.add_argument('config', type=str, help='Path to config file.')
 parser.add_argument('stage', type=str, help='train or val.')

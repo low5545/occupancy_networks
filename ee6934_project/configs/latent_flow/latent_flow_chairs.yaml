@@ -23,7 +23,7 @@ trainer:
                                   #     factor of the length of the testing dataset
   accelerator:                    #     { <empty> (single CPU/GPU), ddp (GPU), ddp_spawn (GPU) }
 
-  max_steps: 300000
+  max_steps: 200000
   log_every_n_steps: 100
   check_val_every_n_epoch: 40
   flush_logs_every_n_steps: 400

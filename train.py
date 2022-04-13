@@ -173,7 +173,7 @@ while True:
                                loss_val_best=metric_val_best)
             exit(3)
         elif it >= cfg['training']['num_iters']:
-            print('Epoch limit reached. Exiting.')
+            print('Iteration limit reached. Exiting.')
             checkpoint_io.save('model.pt', epoch_it=epoch_it, it=it,
                                loss_val_best=metric_val_best)
             exit(3)

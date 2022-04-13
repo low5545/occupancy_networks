@@ -104,15 +104,6 @@ class LatentFlow(pl.LightningModule):
         )
 
         # instantiate learning rate scheduler
-        lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-            optimizer,
-            milestones=[ 150000, 250000 ],
-            gamma=0.1
-        )
         return {
-            "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": lr_scheduler,
-                "interval": "step"
-            }
+            "optimizer": optimizer
         }
