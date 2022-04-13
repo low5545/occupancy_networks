@@ -1,0 +1,7 @@
+inherit_from: ee6934_project/configs/latent_flow/latent_flow_cars.yaml
+data:
+  path: data/ShapeNet
+test:
+  model_file: model_best.pt
+generation:
+  generation_dir: out/ee6934_project/generated_mesh
