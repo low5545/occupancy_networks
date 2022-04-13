@@ -1,0 +1,38 @@
+inherit_from: ee6934_project/configs/pcae/pcae_cars.yaml
+data:
+  path: ee6934_project/dataset
+
+# ------------------------------------------------------ #
+logger:
+  save_dir: out
+  name: ee6934_project/latent_flow/latent_flow_cars
+  version:
+
+checkpoint:
+  dirpath:
+  monitor: "val/nll_loss"
+  mode: "min"
+  save_top_k: 1
+  save_weights_only: false
+  every_n_epochs: 40
+
+trainer:
+  num_nodes: 1
+  gpus: [ 0 ]                     #     { <empty> (CPU), <list of gpu ids> (GPU) }. Same across all nodes.
+                                  #     For testing, the total number of gpus across all nodes must be a
+                                  #     factor of the length of the testing dataset
+  accelerator:                    #     { <empty> (single CPU/GPU), ddp (GPU), ddp_spawn (GPU) }
+
+  max_steps: 300000
+  log_every_n_steps: 100
+  check_val_every_n_epoch: 40
+  flush_logs_every_n_steps: 400
+
+  # for debugging purposes
+  # fast_dev_run: True
+  # logger: False
+  # checkpoint_callback: False
+
+  # other useful options
+  # resume_from_checkpoint:
+  # accumulate_grad_batches:
