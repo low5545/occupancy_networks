@@ -1,0 +1,5 @@
+inherit_from: ee6934_project/configs/pcae/pcae_airplanes.yaml
+test:
+  model_file: model_best.pt
+generation:
+  generation_dir: ee6934_project/dataset
