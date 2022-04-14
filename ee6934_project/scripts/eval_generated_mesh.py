@@ -24,9 +24,15 @@ def main(args):
     meshes = []
     for mesh_file in tqdm.tqdm(os.listdir(args.mesh_dir)):
         mesh_path = os.path.join(args.mesh_dir, mesh_file)
-        meshes.append(io.load_mesh(
-            path=mesh_path, include_textures=False, device=device
-        ))
+        try:
+            meshes.append(io.load_mesh(
+                path=mesh_path, include_textures=False, device=device
+            ))
+        except ValueError as e:
+            if str(e) == "Premature end of file":
+                print("Skipping empty generated mesh!")
+            else:
+                raise e
     meshes = pytorch3d.structures.join_meshes_as_batch(
         meshes=meshes, include_textures=False
     )
