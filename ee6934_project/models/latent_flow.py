@@ -4,40 +4,18 @@ import pytorch_lightning as pl
 import nflows.transforms, nflows.nn.nets, nflows.flows, nflows.distributions
 
 
-class InputsOnly(torch.nn.Module):
-    def __init__(self, model):
-        super().__init__()
-        self.model = model
-
-    def forward(self, inputs, context=None):
-        return self.model(inputs)
-
-
 class LatentFlow(pl.LightningModule):
-    def __init__(
-        self,
-        latent_dims=128,
-        hidden_layer_dims=128,
-        num_hidden_layers=2,
-        num_coupling_layers=4,
-        hidden_activation_fn=torch.nn.functional.relu
-    ):
+    def __init__(self):
         super().__init__()
-        self.core = self._build_core(
-            latent_dims,
-            hidden_layer_dims,
-            num_hidden_layers,
-            num_coupling_layers,
-            hidden_activation_fn
-        )
+        self.core = self._build_core()
 
     def _build_core(
         self,
-        latent_dims,
-        hidden_layer_dims,
-        num_hidden_layers,
-        num_coupling_layers,
-        hidden_activation_fn
+        latent_dims=128,
+        hidden_layer_dims=128,
+        num_residual_blocks=1,
+        num_coupling_layers=4,
+        hidden_activation_fn=torch.nn.functional.relu
     ):
         # define alternating mask for each coupling transform
         mask = torch.ones(latent_dims)
@@ -45,16 +23,16 @@ class LatentFlow(pl.LightningModule):
 
         # define helper function to create scale & translation inference
         # networks
-        def _create_mlp(input_dims, output_dims):
-            hidden_sizes = num_hidden_layers * [ hidden_layer_dims ]
-            return InputsOnly(
-                nflows.nn.nets.MLP(
-                    in_shape=[ input_dims ],
-                    out_shape=[ output_dims ],
-                    hidden_sizes=hidden_sizes,
-                    activation=hidden_activation_fn,
-                    activate_output=False
-                )
+        def _create_resnet(input_dims, output_dims):
+            return nflows.nn.nets.ResidualNet(
+                in_features=input_dims,
+                out_features=output_dims,
+                hidden_features=hidden_layer_dims,
+                context_features=None,
+                num_blocks=num_residual_blocks,
+                activation=hidden_activation_fn,
+                dropout_probability=0,
+                use_batch_norm=False
             )
 
         # define the invertible transformation composed of affine coupling
@@ -63,14 +41,15 @@ class LatentFlow(pl.LightningModule):
         for index in range(num_coupling_layers):
             layer = nflows.transforms.AffineCouplingTransform(
                 mask=mask,
-                transform_net_create_fn=_create_mlp,
-                scale_activation=nflows.transforms.AffineCouplingTransform
-                                                  .GENERAL_SCALE_ACTIVATION
+                transform_net_create_fn=_create_resnet,
+                scale_activation=lambda x : (torch.nn.functional.softplus(x) + 1e-3)
             )
-            reverse = nflows.transforms.ReversePermutation(
-                features=latent_dims
+            linear = nflows.transforms.NaiveLinear(
+                features=latent_dims,
+                orthogonal_initialization=True,
+                using_cache=True
             )
-            invertible_transforms.extend([ layer, reverse ])
+            invertible_transforms.extend([ layer, linear ])
 
         # instantiate the normalizing flow
         return nflows.flows.Flow(
@@ -100,10 +79,20 @@ class LatentFlow(pl.LightningModule):
     def configure_optimizers(self):
         # instantiate optimizer
         optimizer = torch.optim.Adam(
-            self.parameters(), lr=0.001
+            self.parameters(), lr=0.001, weight_decay=0.1
         )
 
         # instantiate learning rate scheduler
+        lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
+            optimizer,
+            milestones=[ 150000 ],
+            gamma=0.1
+        )
+
         return {
-            "optimizer": optimizer
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": lr_scheduler,
+                "interval": "step"
+            }
         }
