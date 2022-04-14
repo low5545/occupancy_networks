@@ -101,11 +101,15 @@ for index in [ 1, 3, 5, 7 ]:
 
 test_dataset_len = len(config.get_dataset("test", cfg, return_idx=True))
 for it in tqdm(range(test_dataset_len)):
-    with torch.no_grad():
-        c = latent_flow_model.core.sample(num_samples=1)
+    while True:
+        with torch.no_grad():
+            c = latent_flow_model.core.sample(num_samples=1)
 
-    z = pcae_model.get_z_from_prior((1,), sample=generator.sample).to(device)
-    generated_mesh = generator.generate_from_latent(z, c)
+        z = pcae_model.get_z_from_prior((1,), sample=generator.sample).to(device)
+        generated_mesh = generator.generate_from_latent(z, c)
+
+        if not generated_mesh.is_empty:
+            break
     
     mesh_out_file = os.path.join(generation_dir, '%d.off' % it)
     generated_mesh.export(mesh_out_file)
