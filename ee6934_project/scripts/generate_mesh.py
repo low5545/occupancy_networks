@@ -15,6 +15,39 @@ from im2mesh import config
 from im2mesh.checkpoints import CheckpointIO
 import ee6934_project
 
+
+# ------------- nflows hotfix ------------- #
+def weight_inverse_and_logabsdet(self):
+    """
+    Cost:
+        inverse = O(D^3)
+        logabsdet = O(D)
+    where:
+        D = num of features
+    """
+    # If both weight inverse and logabsdet are needed, it's cheaper to compute both together.
+    identity = torch.eye(self.features, self.features, device=self._weight.device)  # hotfix to place it to the correct device
+    weight_inv, lu = torch.solve(identity, self._weight)  # Linear-system solver.
+    logabsdet = torch.sum(torch.log(torch.abs(torch.diag(lu))))
+    return weight_inv, logabsdet
+
+
+def bind(instance, func, as_name=None):
+    """
+    Bind the function *func* to *instance*, with either provided name *as_name*
+    or the existing name of *func*. The provided *func* should accept the 
+    instance as the first argument, i.e. "self".
+
+    Reference: https://stackoverflow.com/a/1015405
+    """
+    if as_name is None:
+        as_name = func.__name__
+    bound_method = func.__get__(instance, instance.__class__)
+    setattr(instance, as_name, bound_method)
+    return bound_method
+# ----------------------------------------- #
+
+
 parser = argparse.ArgumentParser(
     description='Extract meshes from occupancy process.'
 )
@@ -58,6 +91,13 @@ generator = config.get_generator(pcae_model, cfg, device=device)
 # Generate
 pcae_model.eval()
 latent_flow_model.eval()
+
+# nflows hotfix
+for index in [ 1, 3, 5, 7 ]:
+    bind(
+        instance=latent_flow_model.core._transform._transforms[index],
+        func=weight_inverse_and_logabsdet
+    )
 
 test_dataset_len = len(config.get_dataset("test", cfg, return_idx=True))
 for it in tqdm(range(test_dataset_len)):
